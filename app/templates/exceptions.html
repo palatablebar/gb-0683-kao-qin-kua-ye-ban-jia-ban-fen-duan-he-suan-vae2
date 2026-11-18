@@ -1,1 +1,17 @@
 <section class="panel exceptions"><header><h2>异常记录</h2><span>{{data.quarantine|length}} 条</span></header><div class="scroll"><table class="ledger"><thead><tr><th>#</th><th>业务ID</th><th>原因</th></tr></thead><tbody>{% for q in data.quarantine %}<tr><td class="rownum">{{q.line}}</td><td tabindex="0">{{q.id}}</td><td class="error" title="{{q.raw}}">{{q.code}}</td></tr>{% else %}<tr><td colspan="3">无异常记录</td></tr>{% endfor %}</tbody></table></div></section>
+<section class="panel period"><header><h2>本期采用与补卡裁决</h2><span>{{data.period or '未指定周期'}} · {{'已封账' if data.closed else '未封账'}}</span></header>
+<div class="period-summary">
+<div><label>本期采用版本</label><b>{{data.close.review_version if data.close else '本批'}}</b></div>
+<div><label>冻结班次</label><b>{{data.pin_keys|length}}</b></div>
+<div><label>挡下补卡</label><b>{{data.deferred|length}}</b></div>
+<div><label>跨期补发/补扣</label><b>{{data.adjustments|length}}</b></div>
+<div><label>下期带入</label><b>{{data.carry_in|length}}</b></div>
+<div><label>进入下期</label><b>{{data.next_period or '—'}}</b></div>
+</div>
+{% if data.closed %}<p class="hint">本期已复核封账，晚到补卡不回溯改动已复核工资，保留到下期采用。</p>{% endif %}
+<div class="scroll"><table class="ledger"><thead><tr><th>#</th><th>员工</th><th>归属日</th><th>方向</th><th>版本</th><th>去向</th><th>原因</th></tr></thead><tbody>
+{% for d in data.deferred %}<tr><td class="rownum">{{d.line}}</td><td tabindex="0">{{d.employee}}</td><td>{{d.day}}</td><td>{{d.punch}}</td><td class="num">{{d.version}}</td><td>{{d.target_period}}</td><td class="error">{{d.reason}}</td></tr>{% endfor %}
+{% for d in data.carry_in %}<tr><td class="rownum">—</td><td tabindex="0">{{d.employee}}</td><td>{{d.day}}</td><td>{{d.punch}}</td><td class="num">{{d.version}}</td><td>{{'本期采用' if d.key in data.carried_keys else '待采用'}}</td><td>{{d.period}} 延后</td></tr>{% endfor %}
+{% if not data.deferred and not data.carry_in %}<tr><td colspan="7">本期无晚到补卡</td></tr>{% endif %}
+</tbody></table></div>
+{% if data.adjustments %}<div class="scroll"><table class="ledger"><thead><tr><th>员工</th><th>归属日</th><th>来源期</th><th>已复核</th><th>重算</th><th>差额</th><th>类型</th></tr></thead><tbody>{% for a in data.adjustments %}<tr><td tabindex="0">{{a.employee}}</td><td>{{a.day}}</td><td>{{a.source_period}}</td><td class="num">{{a.reviewed_amount}}</td><td class="num">{{a.recomputed_amount}}</td><td class="num">{{a.delta}}</td><td>{{a.kind}}</td></tr>{% endfor %}</tbody></table></div>{% endif %}</section>

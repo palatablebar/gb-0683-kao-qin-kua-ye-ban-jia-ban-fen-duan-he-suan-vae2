@@ -3,6 +3,7 @@ from pathlib import Path
 from app.config import MODULES
 from app.errors import DomainError
 from app.manifest import identity,manifest
+import app.periods
 
 def load(sample):
     if sample not in ('dirty.csv','clean.csv','legacy.csv'):raise DomainError('SAMPLE','样例名称无效')
@@ -17,6 +18,9 @@ def run(content,parameters=None,stage=7):
         if n>stage:break
         fn=importlib.import_module('app.modules.'+entry[0]+'.service').execute
         state=fn(content,params) if n==1 else fn(state)
+        # 封账快照在班次配对前生效，晚到补卡不得改写已复核的采用版本。
+        if n==2:state=app.periods.guard(state)
+        if n==3:state=app.periods.annotate(state)
     # Decimal values are serialized as strings before any storage or response.
     state=json.loads(json.dumps(state,default=str,ensure_ascii=False))
     state['run_id']=identity(content,params);state['manifest']=manifest(content,params,time.monotonic()-start)

@@ -17,7 +17,7 @@ def split_shift(shift):
     points=sorted(boundaries);segments=[]
     for left,right in zip(points,points[1:]):
         if bs<=left<be:continue
-        segments.append({'id':shift['id'],'employee':shift['employee'],'shift_day':shift['day'],'calendar_day':left.date().isoformat(),'start':left.isoformat(),'end':right.isoformat(),'minutes':int((right-left).total_seconds()//60),'rate':str(a['hourly_rate']),'line':a['_line']})
+        segments.append({'id':shift['id'],'employee':shift['employee'],'shift_day':shift['day'],'calendar_day':left.date().isoformat(),'start':left.isoformat(),'end':right.isoformat(),'minutes':int((right-left).total_seconds()//60),'rate':str(a['hourly_rate']),'line':a['_line'],'carry_in':bool(a.get('_carry_in')),'origin_period':a.get('_origin_period')})
     return segments
 
 def apply(state):

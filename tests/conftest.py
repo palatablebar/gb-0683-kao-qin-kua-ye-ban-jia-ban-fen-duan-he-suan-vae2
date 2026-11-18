@@ -2,6 +2,10 @@ import os
 from pathlib import Path
 import pytest
 from app.workflow import load,run
+@pytest.fixture(autouse=True)
+def isolated_db(tmp_path,monkeypatch):
+    # 每个用例独立数据库，封账与延后账不跨用例泄漏。
+    monkeypatch.setenv('DB_PATH',str(tmp_path/'autouse.db'))
 @pytest.fixture
 def raw():return load('dirty.csv')
 @pytest.fixture

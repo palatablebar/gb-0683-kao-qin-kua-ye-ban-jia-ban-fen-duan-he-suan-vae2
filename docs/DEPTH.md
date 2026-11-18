@@ -32,6 +32,17 @@
 | TRAP-23 | 休息与跨夜端点 | 重复或漏计 | 半开区间切片 | `app/modules/m4_segments/rules.py` | `tests/test_segments.py::test_break_removed` |
 | TRAP-19 | 假日与周末重叠 | 费率相加 | 假日优先 | `app/modules/m5_calculate/rules.py` | `tests/test_calculate.py::test_holiday_overrides_rest` |
 
+## 封账裁决登记
+
+| 议题 | 裁决 | 处理位置 | 测试 |
+|---|---|---|---|
+| 晚到补卡 vs 已复核工资 | 已复核周期冻结，补卡留到下一期，不回溯改写 | `app/periods.py` | `tests/test_periods.py::test_reviewed_period_keeps_frozen_pay` |
+| 进卡或出卡一改版 | 整班不拼接，本期按冻结卡复算，改版卡整张延后 | `app/periods.py` | `tests/test_periods.py::test_single_card_revision_defers_whole_shift` |
+| 补卡丢失 | 延后账幂等登记，重跑不重复、不丢原件 | `app/store.py` | `tests/test_periods.py::test_deferred_card_is_not_lost_on_rerun` |
+| 下期重付 | 上期已付保留，下期只计补发/补扣差额 | `app/periods.py` | `tests/test_periods.py::test_carry_in_is_adjustment_not_full_repay` |
+| 封账失败 | 事务不写入，旧版证据与冻结快照保持 | `app/store.py` | `tests/test_periods.py::test_failed_close_keeps_previous_close` |
+| 页面与导出可核对 | 班次显示采用版本与来源，延后与调整单列，导出同含 | `app/templates/`、`app/modules/m7_archive/export_out.py` | `tests/test_periods.py::test_export_shows_adopted_versions_and_deferred` |
+
 ## 对账规则
 
 输入行数=采纳+隔离+空行+重复表头+完全重复；业务总数与计算证据独立求和。隔离行保留来源行、ID、原因码与原值。

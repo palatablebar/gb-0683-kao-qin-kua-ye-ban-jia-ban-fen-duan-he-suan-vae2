@@ -17,7 +17,17 @@ def price(segments,holidays):
     return out
 
 def apply(state):
+    from app.periods import adjustments
     holidays=set(state['parameters'].get('holidays',['2026-10-01']))
     calculations=price(state['segments'],holidays)
-    total=sum((Decimal(r['amount']) for r in calculations),Decimal(0));paid=sum((Decimal(str(r['paid'])) for r in state['rows']),Decimal(0))
-    state['calculations']=calculations;state['business']={'total':str(total),'paid':str(paid),'difference':str(total-paid),'minutes':sum(r['minutes'] for r in calculations),'unit':'CNY'};return state
+    state['calculations']=calculations
+    state['adjustments']=adjustments(state)
+    # 跨期带入的补卡不重付整班：其已复核金额在上期已发，本期只计差额。
+    current=[r for r in calculations if not r.get('carry_in')]
+    total=sum((Decimal(r['amount']) for r in current),Decimal(0))
+    delta=sum((Decimal(r['delta']) for r in state['adjustments']),Decimal(0))
+    paid=sum((Decimal(str(r['paid'])) for r in state['rows']),Decimal(0))
+    state['business']={'total':str(total),'adjustment':str(delta),'payable':str(total+delta),
+        'paid':str(paid),'difference':str(total+delta-paid),
+        'minutes':sum(r['minutes'] for r in current),'unit':'CNY',
+        'carried_minutes':sum(r['minutes'] for r in calculations if r.get('carry_in'))};return state

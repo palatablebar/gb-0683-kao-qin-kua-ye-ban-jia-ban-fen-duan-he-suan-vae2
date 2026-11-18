@@ -30,6 +30,21 @@ def create_app():
         data=request.get_json(silent=True) or {}
         if not isinstance(data.get('version'),int):raise DomainError('VERSION','请提交复核版本')
         return jsonify(store.review(run_id,data['version'],data.get('decision')))
+    @app.get('/api/periods')
+    def periods():return jsonify(closes=store.list_closes(),deferrals=store.deferral_ledger())
+    @app.post('/api/periods/<period>/close')
+    def close(period):
+        data=request.get_json(silent=True) or {}
+        if not isinstance(data.get('version'),int):raise DomainError('VERSION','请提交复核版本')
+        run_id=data.get('run_id')
+        if not isinstance(run_id,str):raise DomainError('VERSION','请提交批次')
+        return jsonify(store.close_period(period,run_id,data['version']))
+    @app.get('/api/periods/<period>/evidence.csv')
+    def period_evidence(period):
+        text=store.close_bundle(period)
+        if text is None:raise DomainError('NOT_FOUND','周期尚未封账',404)
+        return Response(text,mimetype='text/csv; charset=utf-8',
+            headers={'Content-Disposition':f'attachment; filename=close-{period}.csv'})
     @app.get('/api/archive/<run_id>/export.csv')
     def download(run_id):
         state=store.get(run_id)
